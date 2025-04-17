@@ -1,0 +1,14 @@
+[project]
+name = "herbie-plugin-tutorial"
+version = "0.1.0"
+description = "A demonstration of a Herbie plugin to use custom model templates."
+readme = "README.md"
+authors = [
+    { name = "Brian Blaylock", email = "blaylockbk@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
