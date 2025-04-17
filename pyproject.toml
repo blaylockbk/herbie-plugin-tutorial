@@ -7,7 +7,9 @@ authors = [
     { name = "Brian Blaylock", email = "blaylockbk@gmail.com" }
 ]
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "herbie-data>=2025.3.1",
+]
 
 [build-system]
 requires = ["hatchling"]
