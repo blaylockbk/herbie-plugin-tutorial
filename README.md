@@ -1,6 +1,11 @@
+<div align=center>
+<img src="images/herbie-tires.png" width=250>
+
 # Herbie Plugin Tutorial
 
-This is a demonstration of writing a plugin for [Herbie](https://github.com/blaylockbk/Herbie) to add custom model templates.
+</div>
+
+This is a demonstration of writing a plugin for [Herbie](https://github.com/blaylockbk/Herbie) to add custom model templates--like giving Herbie a new set of tires.
 
 I’d love for you to contribute your model template to the main Herbie repository—but sometimes you might need your own:
 
