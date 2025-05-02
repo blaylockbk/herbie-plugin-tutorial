@@ -88,9 +88,10 @@ class hrrr_analysis:
         self.SOURCES = {
             "aws": f"https://noaa-hrrr-bdp-pds.s3.amazonaws.com/hrrr.{self.date:%Y%m%d}/conus/hrrr.t{self.date:%H}z.wrf{self.product}f00.grib2",
         }
+        self.LOCALFILE = f"{self.get_remoteFileName}"
 
 
-class bwm:
+class bmw:
     """Custom template for Brian's Model of Weather (BMW) data."""
 
     def template(self):
@@ -104,3 +105,4 @@ class bwm:
         self.SOURCES = {
             "local_main": f"/path/to/bmw/model/output/{self.model}/gribfiles/{self.date:%Y%m%d%H}/my_file.t{self.date:%H}z.f{self.fxx:02d}_{self.domain}.grib2",
         }
+        self.LOCALFILE = f"{self.get_remoteFileName}"

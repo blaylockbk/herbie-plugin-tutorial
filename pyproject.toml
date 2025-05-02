@@ -1,15 +1,19 @@
 [project]
-name = "herbie-plugin-tutorial"
-version = "0.1.0"
-description = "A demonstration of a Herbie plugin to use custom model templates."
+name = "herbie-plugin-tutorial"  #EDIT ME
+version = "0.1.0"  # EDIT ME
+description = "A demonstration of a Herbie plugin to use custom model templates."  # EDIT ME
 readme = "README.md"
 authors = [
-    { name = "Brian Blaylock", email = "blaylockbk@gmail.com" }
+    { name = "Brian Blaylock", email = "blaylockbk@gmail.com" }  # EDIT ME
 ]
 requires-python = ">=3.10"
 dependencies = [
     "herbie-data>=2025.3.1",
 ]
+
+[project.entry-points."herbie.plugins"]
+hrrr_analysis = "herbie_plugin_tutorial:hrrr_analysis" # EDIT ME
+bmw = "herbie_plugin_tutorial:bmw" # EDIT ME
 
 [build-system]
 requires = ["hatchling"]
