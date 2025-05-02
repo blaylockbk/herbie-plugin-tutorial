@@ -1,112 +1,136 @@
 <div align=center>
-<img src="images/herbie-tires.png" width=250>
+<img src="https://raw.githubusercontent.com/blaylockbk/herbie-plugin-tutorial/refs/heads/main/images/herbie-tires.png" width=250>
 
 # Herbie Plugin Tutorial
 
 </div>
 
-This is a demonstration of writing a plugin for [Herbie](https://github.com/blaylockbk/Herbie) to add custom model templates--like giving Herbie a new set of tires.
+This tutorial shows how to write a plugin for [Herbie](https://github.com/blaylockbk/Herbie) to add custom model templates—like giving Herbie a new set of tires.
 
-I’d love for you to contribute your model template to the main Herbie repository—but sometimes you might need your own:
+You might need your own model template when:
 
-- You have local GRIB2 files you want to access using Herbie (e.g., a WRF or MPAS simulation).
-- You need to handle an existing model a little differently.
-- You have access to GRIB2 model data on a private network.
-- You want to test a new or updated model template before contributing upstream.
-- Other reasons? Let me know!
+- You have local GRIB2 files (e.g., WRF/MPAS output) you'd like to access with Herbie.
+- You have access to GRIB2 data on a private network.
+- You want to override behavior of an existing model temple.
+- You want to iterate on a new model template before contributing upstream.
 
-## How it works
+## What is a Herbie model template?
 
-Herbie plugins let you add custom model templates that Herbie can discover when imported.
+A _model template_ in Herbie is a Python class that defines where Herbie looks for weather model datasets. Herbie comes with a bunch of [model templates](https://github.com/blaylockbk/Herbie/tree/main/src/herbie/models) you can look at for reference. When you import Herbie, it loads its model templates, and then Herbie looks for any templates from installed plugins.
 
-For example, after installing Herbie and this plugin tutorial:
+## Project structure
 
-```bash
-pip install herbie-data
+Here's what your plugin project should look like:
 
-git clone https://github.com/blaylockbk/herbie-plugin-tutorial.git
-cd herbie-plugin-tutorial
-pip install -e .
+```
+herbie-plugin-tutorial/
+├── pyproject.toml
+└── src/
+    └── herbie_plugin_tutorial/
+        └── __init__.py  # contains your model templates
 ```
 
-Herbie can now use the custom templates defined in this .`herbie-plugin-tutorial` plugin.
+## Create the plugin project
 
-## Creating a plugin
-
-I created this `herbie-data-tutorial` repository using [uv](https://docs.astral.sh/uv/) and specified Python 3.10 (the minimum required by Herbie):
+I used [uv](https://docs.astral.sh/uv/) to create this example plugin:
 
 ```bash
 uv init --lib herbie-plugin-tutorial --python 3.10
-```
-
-Then I added `herbie-data` as a dependency (because the plugin without Herbie would not be very useful).
-
-```bash
+cd herbie-plugin-tutorial
 uv add herbie-data
 ```
 
-To register this package as a Herbie plugin, add the following endpoints to your `pyproject.toml`. The key (e.g., `herbie_plugin_demo`) should match your plugin's name.
+- I set `--python 3.10` because that is Herbie's minimum version
+- Add `herbie-data` as a dependency, because what good is a plugin without the main package.
+
+To register your plugin with Herbie, add the following to your `pyproject.toml`:
 
 ```toml
 [project.entry-points."herbie.plugins"]
-herbie_plugin_demo = "herbie_plugin_demo"
+hrrr_analysis = "herbie_plugin_tutorial:hrrr_analysis"
+bmw = "herbie_plugin_tutorial:bmw"
 ```
 
 ### Making a custom model template
 
-Your model templates live in your plugin’s __init__.py file.
+Your model templates live in your plugin’s `__init__.py` file.
 
 Model templates are a bit of a craft due to some historical quirks, a few odd conventions (Herbie's grown over time!), and support for a lot of edge cases. Still, the basic structure is simple.
 
-Take a look at `herbie-plugin-tutorial/src/herbie_plugin_tutorial/__init__.py`, which includes two example templates:
+Take a look at this plugin's [`__init__.py`](https://github.com/blaylockbk/herbie-plugin-tutorial/blob/main/src/herbie_plugin_tutorial/__init__.py), which includes two example templates:
 
-1. `hrrr_analysis` — A custom version of the HRRR model that only finds analysis fields from AWS.
-2. `bmw` — Local GRIB2 files output from a fictional dataset: _BMW_ "Brian's Model of Weather"
+1. `hrrr_analysis` — A custom template for the HRRR model that only locates analysis fields from AWS.
+2. `bmw` — Local GRIB2 files output from a fictional dataset _BMW_ "Brian's Model of Weather"
+
+> [!TIP]
+> 
+> 1. Class names must be lowercase! Herbie lowercases the `model=` input, so `model='HRRR'` becomes `model='hrrr'`.
+> 
+> 1. Set `self.DESCRIPTION` and `self.DETAILS` for helpful metadata.
+> 
+> 1. `self.PRODUCTS` must have at least one entry. If the user doesn't provide a `product=`, Herbie uses the first one by default.
+> 
+> 1. `self.SOURCES` is a dictionary of key-value pairs. Herbie will try each one in order until it finds a valid file. Prefix a key with `local` if the file is on disk instead of on a remote server.
+> 
+> 1. `self.LOCALFILE` is how you specify what the file name will be when it is downloaded. Setting to `f"{self.get_remoteFileName}"` simply says to keep the original name of the file.
+>
+> Look at [existing model templates](https://github.com/blaylockbk/Herbie/tree/main/herbie/models) for more examples.
 
 
-### Tips for writing a template
+## Use your Herbie plugin
 
-1. The class name must be lowercase! Herbie lowercases the `model=` input, so `model='HRRR'` becomes `model='hrrr'`.
+Install the plugin `pip install -e .` in your environment to use your custom templates.
 
-1. Set `self.DESCRIPTION` and `self.DETAILS` for helpful metadata.
 
-1. `self.PRODUCTS` must have at least one entry. If the user doesn't provide a `product=`, Herbie uses the first one by default. This value is stored as `self.product`.
-
-1. `self.SOURCES` is a dictionary of key-value pairs. Herbie will try each one in order until it finds a valid file. Prefix a key with `local` if the file is on disk instead of on a remote server.
-
-Look at [existing model templates](https://github.com/blaylockbk/Herbie/tree/main/herbie/models) for more examples.
-
-## Install your plugin
-
-From the root of your new plugin (where `pyproject.toml` lives) install your package with:
+Let's walk through using this plugin in a new project using uv.
 
 ```bash
-pip install -e .
+uv init new_project
+cd new_project
+uv add herbie-data --extra extras
+uv add --editable ../herbie-plugin-tutorial
 ```
 
-## Use your custom model in Herbie
+- I used `--editable` so I could debug the plugin if needed.
 
-Once installed, Herbie will automatically detect and register your custom templates:
+Then launch Python
+
+```bash
+uv run python
+```
+
+Importing Herbie automatically registers your templates.
 
 ```python
 from herbie import Herbie
 ```
 
-You’ll see something like this in your console:
+You should see output like this when a plugin loads:
 
-```
-Herbie: model template 'hrrr_analysis' from custom plugin was added to globals.
-Herbie: model template 'bmw' from custom plugin was added to globals.
-```
+> ```
+> Herbie: Added model 'bmw' from herbie-plugin-tutorial.
+> Herbie: Added model 'hrrr_analysis' from herbie-plugin-tutorial.
+> ```
 
-You can now use your custom model like any built-in Herbie model:
-
-```python
-H = Herbie("2025-01-01", model="hrrr_analysis")
-```
+Now you can use those models in Herbie.
 
 ```python
-H = Herbie("2025-01-01", model="bmw", domain='3a')
+H = Herbie("2023-01-01", model="hrrr_analysis")
 
-# Note: This example will never find anything because BMW is a fictional model for demonstration.
+# This one doesn't find anything because its a fictitious model
+H = Herbie("2022-01-01", model="bmw", domain='hello')
 ```
+
+You can look at the possible source locations with `H.SOURCES`
+
+```python
+>>> from herbie import Herbie
+>>> H = Herbie("2022-01-01", model="bmw", domain='hello')
+💔 Did not find ┊ model=bmw ┊ product=default ┊ 2022-Jan-01 00:00 UTC F00
+>>> H.SOURCES
+{'local_main': '/path/to/bmw/model/output/bmw/gribfiles/2022010100/my_file.t00z.f00_hello.grib2'}
+```
+
+## Fin
+
+Please [tell me](https://github.com/blaylockbk/Herbie/discussions/categories/show-and-tell) if you made a useful plugin. Consider publishing it on GitHub or PyPI if you think others would like it too.
